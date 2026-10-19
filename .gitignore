@@ -1,0 +1,14 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local tooling
+.claude/
+.DS_Store
+*.log
+
+# Korg card dumps are copyrighted and not redistributed: import them locally
+# (see assets/cards/README.md). Only the instructions are versioned.
+assets/cards/*
+!assets/cards/README.md
