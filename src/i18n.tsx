@@ -17,6 +17,7 @@ const kbd = (k: string) => <kbd>{k}</kbd>
 const it = {
   // Header and layout
   languageLabel: 'Lingua',
+  betaTitle: 'Versione di prova: alcune funzioni sono sperimentali. Fai sempre un backup dell’A2.',
   source: 'Sorgente',
   destination: 'Destinazione',
   hint: (k: Keys): ReactNode => <>{kbd(k.copy)} {kbd(k.cut)} {kbd(k.paste)} · Trascina: sorgente → destinazione copia · nella destinazione sposta, {kbd(k.alt)} per copiare · doppio clic rinomina · {kbd(k.del)} svuota</>,
@@ -145,6 +146,7 @@ export type Strings = typeof it
 
 const en: Strings = {
   languageLabel: 'Language',
+  betaTitle: 'Test version: some features are experimental. Always back up your A2.',
   source: 'Source',
   destination: 'Destination',
   hint: (k) => <>{kbd(k.copy)} {kbd(k.cut)} {kbd(k.paste)} · Drag: source → destination copies · within the destination moves, {kbd(k.alt)} to copy · double-click renames · {kbd(k.del)} clears</>,

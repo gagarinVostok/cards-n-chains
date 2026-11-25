@@ -2,6 +2,8 @@
 
 Cards n’ Chains è un librarian ed editor locale per dump completi SysEx del Korg A2. *English version: [README.md](README.md).*
 
+**Beta online:** https://gagarinvostok.github.io/cards-n-chains/ (senza dump delle card: apri i tuoi con “Apri dump”).
+
 ## Avvio
 
 ```bash

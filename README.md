@@ -4,6 +4,8 @@ A local, offline librarian and patch editor for the **Korg A2** multi-effects pr
 It opens full SysEx card dumps, lets you move presets between cards, edit effect chains and
 parameters, and export a new `.SYX` file for the unit.
 
+**Beta online:** https://gagarinvostok.github.io/cards-n-chains/ (no card dumps included: open your own with *Open dump*).
+
 *Versione italiana: [README.it.md](README.it.md).*
 
 ## Features

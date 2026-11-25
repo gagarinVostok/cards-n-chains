@@ -317,7 +317,7 @@ function App() {
     <LangContext.Provider value={t}>
     <main>
       <header>
-        <div><p className="eyebrow">KORG A2 LIBRARIAN</p><h1>Cards n’ Chains</h1></div>
+        <div><p className="eyebrow">KORG A2 LIBRARIAN</p><h1>Cards n’ Chains <span className="beta-badge" title={t.betaTitle}>BETA</span></h1></div>
         <div className="lang-switch" role="group" aria-label={t.languageLabel}>
           {(['it', 'en'] as const).map((l) => (
             <button key={l} aria-pressed={lang === l} onClick={() => chooseLang(l)} lang={l} title={l === 'it' ? 'Italiano' : 'English'}>{l.toUpperCase()}</button>
