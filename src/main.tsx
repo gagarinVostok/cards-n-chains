@@ -13,6 +13,7 @@ import { selectCardFiles } from './cardImport'
 import { deleteStoredCard, listStoredCards, storeCards } from './cardStore'
 import { ImportDialog } from './ImportDialog'
 import { type Banks, type Clip, type DropMode, type Side, type SlotRef, chainLabel, copyClip, dropMode, isEmptyProgram, sameSound, moveProgram, pasteProgram, replaceProgram, revertSound, slotNumber } from './librarian'
+import { version } from '../package.json'
 import '@fontsource/roboto-mono/latin-500.css'
 import './styles.css'
 
@@ -23,6 +24,9 @@ function download(bank: A2Bank, filename = 'NEWCRD.SYX') {
   link.click()
   setTimeout(() => URL.revokeObjectURL(link.href), 0)
 }
+
+/** Shown in the footer: 0.5.0 → 0.5 (the pre-commit hook bumps it at every commit). */
+const APP_VERSION = version.replace(/\.0$/, '')
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform)
 const shortcut = (key: string) => `${isMac ? '⌘' : 'Ctrl+'}${key}`
@@ -373,7 +377,7 @@ function App() {
         <Bank side="destination" title={t.destination} bank={banks.destination} selected={selected} select={setSelected} rename={rename} info={setInfoSlot} preview={preview} dnd={dnd} cut={clip?.cut ? clip.from : null} open={() => destinationFile.current?.click()} create={banks.source ? createDestination : undefined} exportCard={exportDestination} modified={modified} />
       </section>
       <footer className="app-footer">
-        <span>{t.madeBy}</span>
+        <span>{t.madeBy(APP_VERSION)}</span>
         <span>{t.thanks(<a href="https://korgaseries.info" target="_blank" rel="noopener noreferrer">korgaseries.info</a>)}</span>
         <span className="footer-disclaimer">
           {t.disclaimer}

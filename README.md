@@ -58,6 +58,8 @@ npm run build   # type-check and production build in dist/
 
 Tests use synthetic dumps; the ones on real cards run only when the dumps have been imported.
 
+**Versioning:** every commit bumps the version by 0.1 (0.5 → 0.6 → …), shown in the footer. Enable the hook once per clone with `git config core.hooksPath .githooks`; skip it for a single commit (e.g. an amend) with `SKIP_VERSION_BUMP=1 git commit …`.
+
 | Path | Content |
 |---|---|
 | `src/a2sysex.ts` | Full-dump parser/serializer, Korg 8→7 bit packing |

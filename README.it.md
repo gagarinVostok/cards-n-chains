@@ -22,6 +22,8 @@ npm test
 
 I test usano dump sintetici generati in `src/test-fixtures.ts`. Verificano inoltre il round-trip byte per byte di ogni card reale in `assets/cards/`.
 
+**Versioni:** ogni commit aumenta la versione di 0.1 (0.5 → 0.6 → …), mostrata nel footer. Attiva l'hook una volta per copia con `git config core.hooksPath .githooks`; per saltarlo in un singolo commit (es. un amend) usa `SKIP_VERSION_BUMP=1 git commit …`.
+
 ## Sicurezza
 
 L'app non comunica ancora con hardware MIDI. Non modifica il file originale: scarica un nuovo dump. Le azioni editor preservano i parametri del preset; svuotare (⌫) o spostare uno slot lo rinomina prudentemente in `INIT` e non inventano un preset vuoto.

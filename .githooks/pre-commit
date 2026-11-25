@@ -1,0 +1,7 @@
+#!/bin/sh
+# Bumps the app version by 0.1 (0.5.0 -> 0.6.0) on every commit and adds it to the commit.
+# Enable once per clone with:  git config core.hooksPath .githooks
+# Skip for a single commit (e.g. git commit --amend) with:  SKIP_VERSION_BUMP=1 git commit ...
+[ -n "$SKIP_VERSION_BUMP" ] && exit 0
+node scripts/bump-version.mjs >/dev/null || exit 1
+git add package.json package-lock.json
