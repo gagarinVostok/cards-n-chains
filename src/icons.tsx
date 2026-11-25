@@ -24,5 +24,6 @@ export const CloseIcon = () => <Icon d={['M6 6l12 12', 'M18 6L6 18']} />
 export const SaveIcon = () => <Icon d={['M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z', 'M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7', 'M7 3v4a1 1 0 0 0 1 1h7']} />
 export const PlayIcon = () => <Icon d={['M7 4.5v15l12.5-7.5z']} />
 export const StopIcon = () => <Icon d={['M6.5 6.5h11v11h-11z']} />
+export const TrashIcon = () => <Icon d={['M3 6h18', 'M8 6V4h8v2', 'M19 6l-1 14H6L5 6', 'M10 11v6', 'M14 11v6']} />
 export const PauseIcon = () => <Icon d={['M8 5v14', 'M16 5v14']} />
 export const RevertIcon = () => <Icon d={['M3 7v5h5', 'M3.5 12a8.5 8.5 0 1 0 2.5-6l-3 3']} />

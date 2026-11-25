@@ -35,9 +35,12 @@ Open the address printed by Vite (http://localhost:5173) in Chrome, Edge, Firefo
 
 The library shows the dumps found in [`assets/cards/`](assets/cards/README.md). They are **not part of the
 repository**, because the factory cards are copyrighted by Korg and the community cards have no
-redistribution license. Download *Korg A2 Complete files* from [korgaseries.info](https://korgaseries.info)
-and import it with `npm run import-cards`. Without them the app still works: open any full A2 dump with
-**Open dump**.
+redistribution license. Download *Korg A2 Complete files* from [korgaseries.info](https://korgaseries.info), extract it, then either:
+
+- in the app (also the online beta), click **Add cards**, accept the responsibility notice and select the `.syx` files: they are stored in your browser only (IndexedDB) and never uploaded; or
+- in a local copy, run `npm run import-cards -- "/path/to/Korg_A2_Complete_files"` to add them to `assets/cards/`.
+
+Without cards the app still works: open any full A2 dump with **Open dump**.
 
 ## Audio previews
 

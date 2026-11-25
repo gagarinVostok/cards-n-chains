@@ -32,7 +32,7 @@ Un preset con chain esterna (`80–89`) dipende dall'area chain della card. Copi
 
 ## Card incluse
 
-I dump delle card **non sono inclusi nel repository**: le card di fabbrica sono di Korg e quelle della community non hanno una licenza di ridistribuzione. Scarica *Korg A2 Complete files* da [korgaseries.info](https://korgaseries.info) e importali con `npm run import-cards -- "<cartella>"`: lo script li riconosce dal nome, verifica che siano dump A2 completi e li copia in `assets/cards/` con i nomi attesi, in sola lettura (dettagli in [assets/cards/README.md](assets/cards/README.md)). Senza card l'app funziona comunque: apri un dump con “Apri dump”.
+I dump delle card **non sono inclusi nel repository**: le card di fabbrica sono di Korg e quelle della community non hanno una licenza di ridistribuzione. Scarica *Korg A2 Complete files* da [korgaseries.info](https://korgaseries.info) e importali con `npm run import-cards -- "<cartella>"`: lo script li riconosce dal nome, verifica che siano dump A2 completi e li copia in `assets/cards/` con i nomi attesi, in sola lettura (dettagli in [assets/cards/README.md](assets/cards/README.md)). In alternativa, anche nella beta online, usa **Aggiungi card**: dopo aver accettato l'avviso di responsabilità scegli i file `.syx`, che restano salvati solo nel tuo browser (IndexedDB) e non vengono caricati da nessuna parte. Senza card l'app funziona comunque: apri un dump con “Apri dump”.
 
 ### Dettagli card
 

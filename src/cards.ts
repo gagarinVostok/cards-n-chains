@@ -47,16 +47,27 @@ export const cardName = (file: string) => cardInfo(file)?.name ?? file.replace(/
 export const cardGroups = (file: string): CardGroup[] => cardInfo(file)?.groups ?? ['custom']
 
 export type LibraryCard = { file: string; url: string }
-export type LoadedCard = LibraryCard & { bank: A2Bank; externalChains: number }
+/** `source`: bundled in the build (assets/cards) or added by the user and kept in this browser. */
+export type LoadedCard = LibraryCard & { bank: A2Bank; externalChains: number; source: 'bundled' | 'browser' }
 
 export const libraryCards: LibraryCard[] = Object.entries(urls)
   .map(([path, url]) => ({ file: path.split('/').pop()!, url }))
   .sort((a, b) => cardName(a.file).localeCompare(cardName(b.file), 'it'))
 
+export function cardFromBytes(file: string, data: ArrayBuffer, source: LoadedCard['source'], url = ''): LoadedCard {
+  const bank = parseA2AllDump(data)
+  const externalChains = new Set(bank.programs.map((p) => p.raw[0]).filter(isExternalChain)).size
+  return { file, url, bank, externalChains, source }
+}
+
 export async function loadCard(card: LibraryCard): Promise<LoadedCard> {
   const response = await fetch(card.url)
   if (!response.ok) throw new AppError('loadFailed', { file: card.file })
-  const bank = parseA2AllDump(await response.arrayBuffer())
-  const externalChains = new Set(bank.programs.map((p) => p.raw[0]).filter(isExternalChain)).size
-  return { ...card, bank, externalChains }
+  return cardFromBytes(card.file, await response.arrayBuffer(), 'bundled', card.url)
+}
+
+/** Bundled cards first; a browser card with the same file name as a bundled one is ignored. Sorted by full name. */
+export function mergeLibrary(bundled: LoadedCard[], browser: LoadedCard[]) {
+  const names = new Set(bundled.map((c) => c.file.toUpperCase()))
+  return [...bundled, ...browser.filter((c) => !names.has(c.file.toUpperCase()))].sort((a, b) => cardName(a.file).localeCompare(cardName(b.file), 'it'))
 }

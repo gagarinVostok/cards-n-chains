@@ -6,9 +6,12 @@ import { Dialog, type DialogRequest } from './Dialog'
 import { Toast, type ToastMessage } from './Toast'
 import { errorMessage } from './errors'
 import { type Lang, LangContext, STRINGS, initialLang, saveLang, useT } from './i18n'
-import { ChainIcon, ExportIcon, InfoIcon, NewIcon, OpenIcon, PauseIcon, PlayIcon } from './icons'
+import { ChainIcon, ExportIcon, InfoIcon, NewIcon, OpenIcon, PauseIcon, PlayIcon, TrashIcon } from './icons'
 import { type Preview, buildPreviewIndex, soundKey } from './previews'
-import { CARD_GROUPS, type CardGroup, type LoadedCard, cardGroups, cardInfo, cardName, libraryCards, loadCard } from './cards'
+import { CARD_GROUPS, type CardGroup, type LoadedCard, cardFromBytes, cardGroups, cardInfo, cardName, libraryCards, loadCard, mergeLibrary } from './cards'
+import { selectCardFiles } from './cardImport'
+import { deleteStoredCard, listStoredCards, storeCards } from './cardStore'
+import { ImportDialog } from './ImportDialog'
 import { type Banks, type Clip, type DropMode, type Side, type SlotRef, chainLabel, copyClip, dropMode, isEmptyProgram, sameSound, moveProgram, pasteProgram, replaceProgram, revertSound, slotNumber } from './librarian'
 import '@fontsource/roboto-mono/latin-500.css'
 import './styles.css'
@@ -53,12 +56,49 @@ function App() {
   const setMessage = (text: string) => setToast(text ? { id: Date.now() + Math.random(), text } : null)
   const [drag, setDrag] = useState<SlotRef | null>(null)
   const [library, setLibrary] = useState<{ cards: LoadedCard[]; failed: string[] }>({ cards: [], failed: [] })
-  useEffect(() => {
-    Promise.allSettled(libraryCards.map(loadCard)).then((results) => setLibrary({
+  const [importing, setImporting] = useState(false)
+  // Bundled cards (assets/cards, absent from the public build) are loaded once; browser cards on every refresh.
+  const bundled = useRef<Promise<{ cards: LoadedCard[]; failed: string[] }> | null>(null)
+  async function refreshLibrary() {
+    bundled.current ??= Promise.allSettled(libraryCards.map(loadCard)).then((results) => ({
       cards: results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : [])),
       failed: libraryCards.filter((_, i) => results[i].status === 'rejected').map((c) => c.file),
     }))
-  }, [])
+    const [fromBuild, stored] = await Promise.all([bundled.current, listStoredCards()])
+    const fromBrowser = stored.flatMap((c) => { try { return [cardFromBytes(c.file, c.bytes.slice().buffer, 'browser')] } catch { return [] } })
+    setLibrary({ cards: mergeLibrary(fromBuild.cards, fromBrowser), failed: fromBuild.failed })
+  }
+  useEffect(() => { refreshLibrary() }, [])
+
+  /** Adds the user's own dumps to the browser library (after they accepted responsibility in the dialog). */
+  async function importFiles(files: File[]) {
+    const read = await Promise.all(files.map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })))
+    const { cards, skipped } = selectCardFiles(read)
+    if (!cards.length) return setMessage(t.importNone)
+    try {
+      await storeCards(cards)
+      await refreshLibrary()
+      setMessage(t.importDone(cards.length, skipped.length))
+    } catch {
+      setMessage(t.importFailed)
+    }
+  }
+
+  /** Deletes one card the user added from this browser's library (an open copy in the source stays). */
+  function deleteBrowserCard(card: LoadedCard) {
+    const name = cardName(card.file)
+    setDialog({
+      title: t.deleteTitle(name),
+      body: t.deleteBody,
+      confirmLabel: t.deleteConfirm,
+      onConfirm: async () => {
+        await deleteStoredCard(card.file)
+        await refreshLibrary()
+        setMessage(t.deleted(name))
+      },
+    })
+  }
+
 
   // One audio player for every preview: starting one stops the previous.
   const previews = useMemo(() => buildPreviewIndex(library.cards), [library.cards])
@@ -245,7 +285,7 @@ function App() {
   // Cmd (macOS) / Ctrl (others) + C, X, V act on the selected slot; ⌫/Canc empties it; Esc cancels a pending cut.
   const onKey = useRef<(e: KeyboardEvent) => void>(() => {})
   onKey.current = (e) => {
-    if (dialog || infoCard || infoSlot || isTextContext(e.target)) return
+    if (dialog || importing || infoCard || infoSlot || isTextContext(e.target)) return
     if (e.key === 'Escape' && clip?.cut) {
       setClip(null)
       return setMessage(t.cutCancelled)
@@ -324,7 +364,7 @@ function App() {
           ))}
         </div>
       </header>
-      <CardLibrary cards={library.cards} failed={library.failed} active={sourceName} open={openLibraryCard} info={setInfoCard} />
+      <CardLibrary cards={library.cards} failed={library.failed} active={sourceName} open={openLibraryCard} info={setInfoCard} onAdd={() => setImporting(true)} onDelete={deleteBrowserCard} />
       <section className="toolbar">
         <span className="toolbar-hint">{t.hint({ copy: shortcut('C'), cut: shortcut('X'), paste: shortcut('V'), alt: isMac ? '⌥' : 'Alt', del: isMac ? '⌫' : lang === 'it' ? 'Canc' : 'Del' })}</span>
       </section>
@@ -360,6 +400,7 @@ function App() {
           onChainChange={(label) => setMessage(t.chainChanged(label))}
         />
       )}
+      {importing && <ImportDialog close={() => setImporting(false)} onFiles={importFiles} />}
       {dialog && <Dialog request={dialog} close={() => setDialog(null)} />}
       <input hidden ref={sourceFile} type="file" accept=".syx" onChange={(e) => { open('source', e.target.files?.[0]); e.target.value = '' }} />
       <input hidden ref={destinationFile} type="file" accept=".syx" onChange={(e) => { open('destination', e.target.files?.[0]); e.target.value = '' }} />
@@ -368,14 +409,19 @@ function App() {
   )
 }
 
-function CardLibrary({ cards, failed, active, open, info }: { cards: LoadedCard[]; failed: string[]; active: string | null; open: (card: LoadedCard) => void; info: (card: LoadedCard) => void }) {
+function CardLibrary({ cards, failed, active, open, info, onAdd, onDelete }: { cards: LoadedCard[]; failed: string[]; active: string | null; open: (card: LoadedCard) => void; info: (card: LoadedCard) => void; onAdd: () => void; onDelete: (card: LoadedCard) => void }) {
   const [filter, setFilter] = useState<CardGroup | 'all'>('all')
   const t = useT()
-  if (libraryCards.length === 0) {
+  const actions = (
+    <div className="library-actions">
+      <button className="icon-button" onClick={onAdd}><NewIcon />{t.addCards}</button>
+    </div>
+  )
+  if (cards.length === 0) {
     return (
       <section className="library">
-        <div className="library-head"><p className="eyebrow">{t.libraryTitle}</p></div>
-        <p className="library-empty">{t.libraryEmpty(<a href="https://korgaseries.info" target="_blank" rel="noopener noreferrer">korgaseries.info</a>, <code>npm run import-cards</code>)}</p>
+        <div className="library-head"><p className="eyebrow">{t.libraryTitle}</p>{actions}</div>
+        <p className="library-empty">{t.libraryEmpty(<a href="https://korgaseries.info/user_cards.php" target="_blank" rel="noopener noreferrer">korgaseries.info</a>)}</p>
       </section>
     )
   }
@@ -391,10 +437,11 @@ function CardLibrary({ cards, failed, active, open, info }: { cards: LoadedCard[
           ))}
         </div>
         {failed.length > 0 && <span className="library-error">{t.unreadable(failed.join(', '))}</span>}
+        {actions}
       </div>
       <div className="library-cards">
         {cards.filter((card) => filter === 'all' || cardGroups(card.file).includes(filter)).map((card) => (
-          <div key={card.file} className="library-item">
+          <div key={card.file} className={`library-item ${card.source === 'browser' ? 'from-browser' : ''}`}>
             <button
               className={`library-card ${active === card.file ? 'active' : ''}`}
               style={cardInfo(card.file)?.color ? ({ '--card-color': cardInfo(card.file)!.color } as React.CSSProperties) : undefined}
@@ -406,6 +453,9 @@ function CardLibrary({ cards, failed, active, open, info }: { cards: LoadedCard[
               <em>{card.externalChains ? t.externalChains(card.externalChains) : t.internalOnly}</em>
             </button>
             <button className="info-button" onClick={() => info(card)} aria-label={t.detailsOf(cardName(card.file))} title={t.programsAndChains}><InfoIcon /></button>
+            {card.source === 'browser' && (
+              <button className="info-button card-delete" onClick={() => onDelete(card)} aria-label={t.deleteCard(cardName(card.file))} title={t.deleteCard(cardName(card.file))}><TrashIcon /></button>
+            )}
           </div>
         ))}
       </div>

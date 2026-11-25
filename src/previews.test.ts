@@ -4,7 +4,7 @@ import type { LoadedCard } from './cards'
 import { buildPreviewIndex, computePeaks, soundKey } from './previews'
 import { syntheticBank } from './test-fixtures'
 
-const card = (file: string, seed: number): LoadedCard => ({ file, url: '', bank: syntheticBank(seed), externalChains: 0 })
+const card = (file: string, seed: number): LoadedCard => ({ file, url: '', bank: syntheticBank(seed), externalChains: 0, source: 'browser' })
 
 describe('audio previews', () => {
   it('ignores the name when identifying a patch sound', () => {
